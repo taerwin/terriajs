@@ -15,6 +15,7 @@ import { BaseModel } from "../../Definition/Model";
 import { proxyCatalogItemBaseUrl } from "../proxyCatalogItemUrl";
 import StratumOrder from "../../Definition/StratumOrder";
 import ThreddsItemReference from "../CatalogReferences/ThreddsItemReference";
+import UrlReference from "../CatalogReferences/UrlReference";
 
 interface ThreddsCatalog {
   id: string;
@@ -160,16 +161,36 @@ export class ThreddsStratum extends LoadableStratum(ThreddsCatalogGroupTraits) {
     }
 
     const itemId = this._catalogGroup.uniqueId + "/" + threddsDataset.id;
-    let item = this._catalogGroup.terria.getModelById(
-      ThreddsItemReference,
-      itemId
-    );
-    if (item === undefined) {
-      item = new ThreddsItemReference(itemId, this._catalogGroup.terria);
-      item.setTrait(CommonStrata.definition, "isGroup", true);
-      item.setDataset(threddsDataset);
-      item.setThreddsStrata(item);
-      item.terria.addModel(item);
+    let item = null;
+
+    let re = /(?<path>.*\/(?<name>\S+).geojson)\?.*/
+    let match = re.exec(threddsDataset.wmsUrl)
+    if (match && match.groups) {
+        item = this._catalogGroup.terria.getModelById(
+          UrlReference,
+          itemId
+        );
+        let item_name = match.groups['name'];
+        let item_path = match.groups['path'];
+        if (item === undefined) {
+            item = new UrlReference(itemId, this._catalogGroup.terria);
+	    item.setTrait(CommonStrata.definition, "name", item_name);
+	    item.setTrait(CommonStrata.definition, "url", item_path);
+            item.terria.addModel(item);
+	}
+
+    } else {
+      item = this._catalogGroup.terria.getModelById(
+        ThreddsItemReference,
+        itemId
+      );
+      if (item === undefined) {
+        item = new ThreddsItemReference(itemId, this._catalogGroup.terria);
+        item.setTrait(CommonStrata.definition, "isGroup", true);
+        item.setDataset(threddsDataset);
+        item.setThreddsStrata(item);
+        item.terria.addModel(item);
+      }
     }
     return item;
   }
