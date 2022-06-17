@@ -24,6 +24,7 @@ interface ThreddsCatalog {
   isLoaded: boolean;
   url: string;
   supportsWms: boolean;
+  supportsHttp: boolean;
   hasDatasets: boolean;
   hasNestedCatalogs: boolean;
   datasets: ThreddsDataset[];
@@ -39,7 +40,9 @@ export interface ThreddsDataset {
   name: string;
   url: string;
   wmsUrl: string;
+  httpUrl: string;
   supportsWms: boolean;
+  supportsHttp: boolean;
   isParentDataset: boolean;
   datasets: ThreddsDataset[];
   catalogs: ThreddsCatalog[];
@@ -163,8 +166,8 @@ export class ThreddsStratum extends LoadableStratum(ThreddsCatalogGroupTraits) {
     const itemId = this._catalogGroup.uniqueId + "/" + threddsDataset.id;
     let item = null;
 
-    let re = /(?<path>.*\/(?<name>\S+).geojson)\?.*/
-    let match = re.exec(threddsDataset.wmsUrl)
+    let re = /(?<path>.*\/(?<name>\S+).geojson).*/
+    let match = re.exec(threddsDataset.httpUrl)
     if (match && match.groups) {
         item = this._catalogGroup.terria.getModelById(
           UrlReference,
